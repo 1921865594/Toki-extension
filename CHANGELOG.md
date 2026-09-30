@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0 — 2026-09-30
+
+### English
+
+- New module identity: `com.toki.lsposed`, version code `1`, with a new release signing certificate. This installs separately from `com.seepd.toki`; disable the 0.x module in LSPosed before enabling 1.0.0. Settings are not migrated automatically.
+- TikTok 47.0.3 and 46.8.3 adaptation, with method discovery and persistent results keyed to the host code and rules.
+- Feed filters for topic and creator recommendation cards, keywords, duration, counts, offline insertion and AI-labeled videos or photos. Ad filtering also covers creator-profile video lists; other content rules remain limited to For You.
+- Playback and clean-mode controls, progress-bar handling, translation and original/translated comment copying.
+- Material 3 interface with 57 language options, feature status, configuration import/export and donation-image saving.
+- Local validation: 252 unit tests passed; lint reported 0 errors and 28 warnings. Release builds use R8 and resource shrinking. The latest profile-ad changes still need device verification.
+
+### 中文
+
+- 新模块包名为 `com.toki.lsposed`，版本号 `1`，使用新的正式签名。与 `com.seepd.toki` 分开安装；请先在 LSPosed 中停用 0.x 模块，再启用 1.0.0，配置不会自动迁移。
+- 适配 TikTok 47.0.3、46.8.3，支持方法查找，并按宿主代码与规则标识持久保存结果。
+- 信息流过滤涵盖话题及创作者推荐卡片、关键词、时长、数量范围、离线插入，以及标记为 AI 生成的视频和照片。广告过滤扩展到作者主页的视频列表，其他内容规则仍只作用于推荐页。
+- 完善播放清屏、进度条处理、翻译与评论原文／译文复制。
+- Material 3 界面提供 57 种语言选项、功能状态查看、配置导入导出及赞助图片保存。
+- 本地验证：252 项单元测试通过，Lint 0 错误、28 警告；Release 启用 R8 与资源压缩。最新作者主页广告过滤调整仍待实机验证。
+
+
 [English](#changelog) | [中文](#中文)
 
 ## 0.4.23

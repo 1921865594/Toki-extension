@@ -11,6 +11,19 @@ in effect for their code and binary distributions.
   <https://github.com/libxposed/api>
 - Gradle Wrapper, licensed under the Apache License 2.0.
   <https://github.com/gradle/gradle>
+- Guava, licensed under the Apache License 2.0.
+  <https://github.com/google/guava>
+- dexlib2 (smali), licensed under the BSD 3-Clause License.
+  <https://github.com/JesusFreke/smali>
+
+Test-only dependencies include JUnit 4 (Eclipse Public License 1.0),
+Robolectric (MIT), AndroidX Compose test libraries (Apache License 2.0),
+and JSON-java (public domain). They are not packaged as test frameworks in
+the release APK.
+
+The project's MIT license retains the copyright notices for krolchonok and
+MeiYongAI. The corresponding project reference is
+<https://github.com/krolchonok/TiktokPatchXposed>.
 
 The Apache License 2.0 text is available at
 <https://www.apache.org/licenses/LICENSE-2.0>.

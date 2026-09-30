@@ -1,30 +1,35 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-/artifacts
-/tmp
-.externalNativeBuild
-.cxx
+# Android and Gradle generated files
+.gradle/
+.kotlin/
+**/build/
 local.properties
-/.idea
-signing.properties
+.idea/
+*.iml
+.externalNativeBuild/
+.cxx/
+captures/
+.DS_Store
+
+# Private signing material
 *.jks
 *.keystore
 *.p12
 *.pem
 *.key
 *.idsig
+keystore/*.properties
+signing.properties
+.env
+.env.*
 
-# Local reverse-engineering notes are not part of the distributed module.
-/REVERSE_FINDINGS.md
-# Local tool output and reverse-engineering artifacts.
-/.codex
+# Local analysis, device captures and design experiments
+/work/
+/.codex/
+/scratch_*
+/preview_logos.html
+/toki_*.svg
+/toki_m3e_canvas.json
+*.apk
+*.apks
+*.xapk
+*.aab

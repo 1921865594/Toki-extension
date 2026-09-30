@@ -1,27 +1,6 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
+# 保留 XposedModule 入口类及生命周期方法
+-keep class com.toki.lsposed.hook.TokiModule { *; }
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
-
--dontwarn io.github.libxposed.annotation.**
--adaptresourcefilecontents META-INF/xposed/java_init.list
--keep,allowoptimization public class * extends io.github.libxposed.api.XposedModule {
-    public <init>();
-}
+# Android 组件由 Manifest 自动生成保留规则；libxposed 服务使用依赖自带规则。
+# 保留错误定位信息，不保留未使用的图标、工具或方法。
+-keepattributes SourceFile,LineNumberTable

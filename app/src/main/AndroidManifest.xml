@@ -1,34 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <permission android:name="com.toki.lsposed.permission.READ_DIAGNOSTICS"
+        android:protectionLevel="signature" />
+    <uses-permission android:name="com.toki.lsposed.permission.READ_DIAGNOSTICS" />
 
+    <!-- 声明目标宿主应用的包可见性，确保 Android 11+ (API 30+) 环境下可正确解析启动 Intent -->
     <queries>
         <package android:name="com.zhiliaoapp.musically" />
+        <package android:name="com.ss.android.ugc.trill" />
     </queries>
 
     <application
-        android:allowBackup="false"
-        android:description="@string/module_description"
+        android:name=".TokiApplication"
+        android:label="Toki"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:allowBackup="false"
         android:supportsRtl="true"
         android:theme="@style/Theme.Toki">
+
+        <!-- LSPosed 模块标识与兼容性声明 -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Toki" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="102" />
+
+        <!-- 桌面管理端主入口（桌面启动项由 LauncherAlias 承载，便于动态隐藏图标） -->
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ui.MainActivity"
+            android:theme="@style/Theme.Toki.Starting"
+            android:exported="true" />
+
+        <!-- 桌面启动别名：禁用该组件即可从桌面隐藏模块图标，
+             恢复入口为 LSPosed 管理器中的模块启动按钮 -->
+        <activity-alias
+            android:name="com.toki.lsposed.LauncherAlias"
+            android:targetActivity=".ui.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-        <provider
-            android:name=".SettingsProvider"
-            android:authorities="com.seepd.toki.settings"
-            android:exported="true"
-            android:grantUriPermissions="false"
-            tools:ignore="ExportedContentProvider" />
+        </activity-alias>
+
     </application>
+
 </manifest>
