@@ -36,7 +36,7 @@ Toki 是面向 TikTok 的 LSPosed 模块，采用 Material 3 界面，提供 57 
 
 支持的包名：`com.zhiliaoapp.musically` 和 `com.ss.android.ugc.trill`。
 
-**从 0.x 迁移：** Toki 1.0.0 使用新模块包名 `com.toki.lsposed` 和新的正式签名，会与 `com.seepd.toki` 分开安装。请先在 LSPosed 中停用原模块，再启用新版；配置不会自动迁移，卸载前请保留需要的设置。详情见[更新日志](CHANGELOG.md)。
+**从 0.x 迁移：** Toki 1.0.0 使用新模块包名 `io.github.meiyongai.toki` 和新的正式签名，会与 `com.seepd.toki` 分开安装。请先在 LSPosed 中停用原模块，再启用新版；配置不会自动迁移，卸载前请保留需要的设置。详情见[更新日志](CHANGELOG.md)。
 
 ## 交流与反馈
 

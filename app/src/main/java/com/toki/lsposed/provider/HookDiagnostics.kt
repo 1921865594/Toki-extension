@@ -11,8 +11,8 @@ import kotlin.coroutines.resume
 
 /** 仅由管理端主动查询的诊断协议；不启动宿主，也不要求宿主唤起管理端服务。 */
 internal object HookDiagnostics {
-    const val ACTION = "com.toki.lsposed.REQUEST_DIAGNOSTICS"
-    const val PERMISSION = "com.toki.lsposed.permission.READ_DIAGNOSTICS"
+    const val ACTION = "io.github.meiyongai.toki.REQUEST_DIAGNOSTICS"
+    const val PERMISSION = "io.github.meiyongai.toki.permission.READ_DIAGNOSTICS"
     val hosts = setOf("com.zhiliaoapp.musically", "com.ss.android.ugc.trill")
 
     /**

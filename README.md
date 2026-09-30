@@ -36,7 +36,7 @@ Toki is an LSPosed module for TikTok, with a Material 3 interface and 57 languag
 
 Supported package names: `com.zhiliaoapp.musically` and `com.ss.android.ugc.trill`.
 
-**Moving from 0.x:** Toki 1.0.0 uses a new module package, `com.toki.lsposed`, and a new release signing key. It installs separately from `com.seepd.toki`; disable the previous module in LSPosed before enabling this one. Settings are not migrated automatically. Keep any needed configuration before uninstalling. See the [release notes](CHANGELOG.md).
+**Moving from 0.x:** Toki 1.0.0 uses a new module package, `io.github.meiyongai.toki`, and a new release signing key. It installs separately from `com.seepd.toki`; disable the previous module in LSPosed before enabling this one. Settings are not migrated automatically. Keep any needed configuration before uninstalling. See the [release notes](CHANGELOG.md).
 
 ## Community
 

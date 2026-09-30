@@ -19,7 +19,7 @@ object LauncherIconController {
     private const val TAG = "TokiLauncherIcon"
 
     /** 桌面启动别名组件名（与 Manifest 中 activity-alias 一致） */
-    private const val ALIAS_CLASS = "com.toki.lsposed.LauncherAlias"
+    private const val ALIAS_CLASS = "io.github.meiyongai.toki.LauncherAlias"
 
     /**
      * 查询桌面图标当前是否处于隐藏状态。
@@ -76,5 +76,5 @@ object LauncherIconController {
      *     - `com.toki.lsposed.ui.LauncherIconController.setIconHidden`: 状态切换。
      */
     private fun aliasComponent(): ComponentName =
-        ComponentName("com.toki.lsposed", ALIAS_CLASS)
+        ComponentName("io.github.meiyongai.toki", ALIAS_CLASS)
 }

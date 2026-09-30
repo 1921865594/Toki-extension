@@ -17,7 +17,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.toki.lsposed"
+        applicationId = "io.github.meiyongai.toki"
         minSdk = 28
         targetSdk = 35
         versionCode = 1

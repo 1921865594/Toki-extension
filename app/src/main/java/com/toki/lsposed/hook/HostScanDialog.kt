@@ -99,7 +99,7 @@ internal class HostScanDialog(activity: Activity, onFailureDismiss: () -> Unit) 
  * Callers: HostScanDialog 构造函数。
  */
 private class ScanContext(activity: Activity) : ContextWrapper(activity) {
-    private val moduleContext = activity.createPackageContext("com.toki.lsposed", 0)
+    private val moduleContext = activity.createPackageContext("io.github.meiyongai.toki", 0)
         .createConfigurationContext(activity.resources.configuration)
     private val moduleTheme = moduleContext.resources.newTheme().apply {
         applyStyle(android.R.style.Theme_Material_Light_Dialog_NoActionBar, true)
