@@ -21,9 +21,10 @@ Robolectric (MIT), AndroidX Compose test libraries (Apache License 2.0),
 and JSON-java (public domain). They are not packaged as test frameworks in
 the release APK.
 
-The project's MIT license retains the copyright notices for krolchonok and
-MeiYongAI. The corresponding project reference is
-<https://github.com/krolchonok/TiktokPatchXposed>.
+Toki is an independent project. Its source code is original work by MeiYongAI
+and is licensed under the MIT License; it contains no third-party source code.
+The 0.x `com.seepd.toki` module predates the 1.0.0 rewrite. See the changelog
+for details.
 
 The Apache License 2.0 text is available at
 <https://www.apache.org/licenses/LICENSE-2.0>.

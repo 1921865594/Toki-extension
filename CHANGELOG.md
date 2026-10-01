@@ -5,6 +5,7 @@
 ### English
 
 - New module identity: `io.github.meiyongai.toki`, version code `1`, with a new release signing certificate. This installs separately from `com.seepd.toki`; disable the 0.x module in LSPosed before enabling 1.0.0. Settings are not migrated automatically.
+- Independent rewrite: the entire 1.0.0 source tree is new code and no longer contains the 0.x `com.seepd.toki` sources.
 - TikTok 47.0.3 and 46.8.3 adaptation, with method discovery and persistent results keyed to the host code and rules.
 - Feed filters for topic and creator recommendation cards, keywords, duration, counts, offline insertion and AI-labeled videos or photos. Ad filtering also covers creator-profile video lists; other content rules remain limited to For You.
 - Playback and clean-mode controls, progress-bar handling, translation and original/translated comment copying.
@@ -14,6 +15,7 @@
 ### 中文
 
 - 新模块包名为 `io.github.meiyongai.toki`，版本号 `1`，使用新的正式签名。与 `com.seepd.toki` 分开安装；请先在 LSPosed 中停用 0.x 模块，再启用 1.0.0，配置不会自动迁移。
+- 独立重写：1.0.0 的全部源码均为新代码，不再包含 0.x `com.seepd.toki` 的源文件。
 - 适配 TikTok 47.0.3、46.8.3，支持方法查找，并按宿主代码与规则标识持久保存结果。
 - 信息流过滤涵盖话题及创作者推荐卡片、关键词、时长、数量范围、离线插入，以及标记为 AI 生成的视频和照片。广告过滤扩展到作者主页的视频列表，其他内容规则仍只作用于推荐页。
 - 完善播放清屏、进度条处理、翻译与评论原文／译文复制。
