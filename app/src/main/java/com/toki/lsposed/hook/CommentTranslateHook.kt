@@ -30,7 +30,7 @@ import java.lang.reflect.Method
  *
  * Callers:
  *     - `com.toki.lsposed.hook.TokiModule.onPackageLoaded`: 宿主目标包加载就绪后初始化挂载。
- *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 目标应用初始化时同步开关配置。
+ *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 目标应用初始化时同步开关配置。
  */
 object CommentTranslateHook {
 
@@ -58,7 +58,7 @@ object CommentTranslateHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 应用启动阶段同步配置。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 应用启动阶段同步配置。
      */
     fun refreshConfig(context: Context) {
         isEnabled = ConfigClient.getBoolean(context, KEY_COMMENT_TRANSLATE_ENABLED)

@@ -1,9 +1,10 @@
 package com.toki.lsposed.hook
 
 import android.app.Application
-import android.app.Instrumentation
 import android.util.Log
 import com.toki.lsposed.provider.ConfigClient
+import com.toki.lsposed.provider.ConfigSchema
+import com.toki.lsposed.provider.TikTokCrashDiagnostics
 import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
@@ -47,6 +48,7 @@ class TokiModule : XposedModule() {
     override fun onModuleLoaded(param: ModuleLoadedParam) {
         HookRuntime.start(param.processName) { tag, message -> log(Log.INFO, tag, message) }
         processName = param.processName
+        TikTokCrashDiagnostics.install(this, param.processName)
         configurationAvailableAtLoad = ConfigClient.initHost({ getRemotePreferences(ConfigClient.FRAMEWORK_GROUP) }) {
             val error = ConfigClient.syncError
             if (error != null) HookRuntime.failure("ConfigClient", error, "配置未就绪，功能暂停")
@@ -57,51 +59,96 @@ class TokiModule : XposedModule() {
     }
 
     /**
-     * 在宿主 onCreate 前应用已验证配置；诊断和方法查找独立于配置连接状态。
+     * 仅在确实存在已开启功能时监听 Application 创建。
      *
-     * @return Unit。
-     *
-     * Callers:
-     * - `com.toki.lsposed.hook.TokiModule.onPackageLoaded`: 目标包加载时触发。
+     * 所有功能关闭时不注册任何宿主 Application Hook，从源头消除模块对 TikTok
+     * 启动早期 Instrumentation 调用链的改动。
      */
-    private fun hookApplication() {
-        val onCreateMethod = Instrumentation::class.java.getMethod("callApplicationOnCreate", Application::class.java)
-        hook(onCreateMethod).setExceptionMode(XposedInterface.ExceptionMode.PASSTHROUGH).intercept { chain ->
-            val app = chain.args[0] as Application
-            HookRuntime.attach(app)
-            if (processName == app.packageName) HostScanController.attach(app)
-            if (configurationAvailableAtLoad && ConfigClient.isReady) {
-                refreshConfiguration(app)
-            }
-            chain.proceed()
+    private fun hookApplicationIfNeeded() {
+        if (!needsApplicationLifecycle()) return
+
+        val onCreateMethod = runCatching {
+            Class.forName(
+                "android.app.Instrumentation",
+                false,
+                Application::class.java.classLoader
+            ).getMethod("callApplicationOnCreate", Application::class.java)
+        }.getOrElse { error ->
+            HookRuntime.failure("ApplicationLifecycle", error, "Application Hook 不可用，宿主不被阻断")
+            return
         }
-        log(Log.INFO, TAG, "Application 配置应用与独立诊断入口已注册")
+
+        hook(onCreateMethod)
+            .setExceptionMode(XposedInterface.ExceptionMode.PASSTHROUGH)
+            .intercept { chain ->
+                // 诊断/扫描 UI 均不得成为宿主启动失败源。
+                runCatching {
+                    val app = chain.args[0] as? Application ?: return@runCatching
+                    HookRuntime.attach(app)
+                    if (processName == app.packageName) HostScanController.attach(app)
+                    refreshEnabledConfiguration(app)
+                }.onFailure { error ->
+                    HookRuntime.failure(
+                        "ApplicationLifecycle",
+                        error,
+                        "宿主启动辅助逻辑失败，已放行原调用"
+                    )
+                }
+                chain.proceed()
+            }
+        HookRuntime.event("TokiModule", "仅因存在已开启功能才注册 Application 生命周期 Hook")
     }
 
     /**
-     * 逐功能应用完整配置，各功能错误明确报告且不影响其它功能或宿主启动。
-     * @param app 宿主应用实例。
-     * @return Unit。
-     * Callers: hookApplication；运行期更新由各功能的配置监听负责。
+     * 判断是否有功能需要 Application 上下文或宿主扫描窗口。
      */
-    private fun refreshConfiguration(app: Application) {
-        HookRuntime.configure("SimHook") { SimHook.refreshConfig(app) }
-        HookRuntime.configure("LocaleHook") { LocaleHook.refreshConfig(app); LocaleHook.applyToApplication(app) }
-        HookRuntime.configure("TimeZoneHook") { TimeZoneHook.refreshConfig(app); TimeZoneHook.applyToApplication(app) }
-        HookRuntime.configure("GpsHook") { GpsHook.refreshConfig(app) }
-        HookRuntime.configure("PlaybackSpeedHook") { PlaybackSpeedHook.refreshConfig(app) }
-        HookRuntime.configure("CommentTranslateHook") { CommentTranslateHook.refreshConfig(app) }
-        HookRuntime.configure("VideoTranslateHook") { VideoTranslateHook.refreshConfig(app) }
-        HookRuntime.configure("CommentCopyHook") { CommentCopyHook.refreshConfig(app) }
-        HookRuntime.configure("AuthorLocationHook") { AuthorLocationHook.refreshConfig(app) }
-        HookRuntime.configure("ImmersiveFullScreenHook") { ImmersiveFullScreenHook.refreshConfig(app) }
-        HookRuntime.configure("AutoScrollHook") { AutoScrollHook.refreshConfig(app) }
-        HookRuntime.configure("FeedFilterHook") { FeedFilterHook.refreshConfig(app) }
-        HookRuntime.configure("DownloadHook") { DownloadHook.refreshConfig(app) }
-        HookRuntime.configure("MusicUnlockHook") { MusicUnlockHook.refreshConfig(app) }
-        HookRuntime.configure("StatusBarHook") { StatusBarHook.refreshConfig(app) }
-        HookRuntime.configure("VideoDurationAlertHook") { VideoDurationAlertHook.refreshConfig(app) }
+    private fun needsApplicationLifecycle(): Boolean =
+        APPLICATION_LIFECYCLE_FEATURES.any(::featureEnabled) || HOST_SYMBOL_FEATURES.any(::featureEnabled)
+
+    /**
+     * 判断指定功能是否至少有一个真实开关处于开启。
+     */
+    private fun featureEnabled(feature: String): Boolean =
+        ConfigSchema.featureSwitches[feature]?.any { key -> ConfigClient.getBoolean(key) } == true
+
+    /**
+     * 应用配置仅覆盖已注册且已启用的功能；关闭的功能不会触发初始化读取。
+     */
+    private fun refreshEnabledConfiguration(app: Application) {
+        HookRuntime.configure("SimHook") { if (featureEnabled("SimHook")) SimHook.refreshConfig(app) }
+        HookRuntime.configure("LocaleHook") { if (featureEnabled("LocaleHook")) { LocaleHook.refreshConfig(app); LocaleHook.applyToApplication(app) } }
+        HookRuntime.configure("TimeZoneHook") { if (featureEnabled("TimeZoneHook")) { TimeZoneHook.refreshConfig(app); TimeZoneHook.applyToApplication(app) } }
+        HookRuntime.configure("GpsHook") { if (featureEnabled("GpsHook")) GpsHook.refreshConfig(app) }
+        HookRuntime.configure("PlaybackSpeedHook") { if (featureEnabled("PlaybackSpeedHook")) PlaybackSpeedHook.refreshConfig(app) }
+        HookRuntime.configure("CommentTranslateHook") { if (featureEnabled("CommentTranslateHook")) CommentTranslateHook.refreshConfig(app) }
+        HookRuntime.configure("VideoTranslateHook") { if (featureEnabled("VideoTranslateHook")) VideoTranslateHook.refreshConfig(app) }
+        HookRuntime.configure("CommentCopyHook") { if (featureEnabled("CommentCopyHook")) CommentCopyHook.refreshConfig(app) }
+        HookRuntime.configure("AuthorLocationHook") { if (featureEnabled("AuthorLocationHook")) AuthorLocationHook.refreshConfig(app) }
+        HookRuntime.configure("ImmersiveFullScreenHook") { if (featureEnabled("ImmersiveFullScreenHook")) ImmersiveFullScreenHook.refreshConfig(app) }
+        HookRuntime.configure("AutoScrollHook") { if (featureEnabled("AutoScrollHook")) AutoScrollHook.refreshConfig(app) }
+        HookRuntime.configure("FeedFilterHook") { if (featureEnabled("FeedFilterHook")) FeedFilterHook.refreshConfig(app) }
+        HookRuntime.configure("DownloadHook") { if (featureEnabled("DownloadHook")) DownloadHook.refreshConfig(app) }
+        HookRuntime.configure("MusicUnlockHook") { if (featureEnabled("MusicUnlockHook")) MusicUnlockHook.refreshConfig(app) }
+        HookRuntime.configure("StatusBarHook") { if (featureEnabled("StatusBarHook")) StatusBarHook.refreshConfig(app) }
+        HookRuntime.configure("VideoDurationAlertHook") { if (featureEnabled("VideoDurationAlertHook")) VideoDurationAlertHook.refreshConfig(app) }
     }
+
+    /**
+     * 有 Application 上下文需求的功能。其它功能通过 ConfigClient 快照实时读取。
+     */
+    private val APPLICATION_LIFECYCLE_FEATURES = setOf(
+        "SimHook", "LocaleHook", "TimeZoneHook", "GpsHook", "PlaybackSpeedHook"
+    )
+
+    /**
+     * 会访问 HostSymbols 的功能。没有这些功能开启时绝不触发 DEX 扫描。
+     */
+    private val HOST_SYMBOL_FEATURES = setOf(
+        "PlaybackSpeedHook", "CommentTranslateHook", "VideoTranslateHook",
+        "CommentCopyHook", "AuthorLocationHook", "ProgressBarHook",
+        "AutoCleanModeHook", "ImmersiveFullScreenHook", "AutoScrollHook",
+        "FeedFilterHook", "MusicUnlockHook"
+    )
 
     /**
      * 目标应用包完成加载时的生命周期回调。
@@ -125,22 +172,16 @@ class TokiModule : XposedModule() {
             "目标应用包已加载 -> ${param.packageName} (isFirstPackage=${param.isFirstPackage})"
         )
 
-        // 优先注册宿主应用 Application 生命周期监听，确保跨进程配置中枢即刻就绪
-        hookApplication()
-
         if (!configurationAvailableAtLoad) return
 
-        // 注册 SIM 卡与国家代码伪装 Hook
-        HookRuntime.install("SimHook") { SimHook.init(this) }
+        // 只有明确开启的系统级功能才修改 Android/Java 框架方法。
+        installIfEnabled("SimHook") { SimHook.init(this) }
+        installIfEnabled("LocaleHook") { LocaleHook.init(this) }
+        installIfEnabled("TimeZoneHook") { TimeZoneHook.init(this) }
+        installIfEnabled("GpsHook") { GpsHook.init(this) }
 
-        // 注册系统语言与 Locale 伪装 Hook
-        HookRuntime.install("LocaleHook") { LocaleHook.init(this) }
-
-        // 注册系统时区伪装 Hook
-        HookRuntime.install("TimeZoneHook") { TimeZoneHook.init(this) }
-
-        // 注册系统 GPS 定位伪装 Hook
-        HookRuntime.install("GpsHook") { GpsHook.init(this) }
+        // Application Hook 也只在必要时注册；全部关闭时目标进程保持零业务注入。
+        hookApplicationIfNeeded()
 
     }
 
@@ -152,46 +193,61 @@ class TokiModule : XposedModule() {
      */
     override fun onPackageReady(param: PackageReadyParam) {
         if (param.packageName !in SUPPORTED_PACKAGES || !param.isFirstPackage) return
-        if (!HostSymbols.initialize(param.applicationInfo, processName == param.packageName)) return
         if (!configurationAvailableAtLoad) return
-        HookRuntime.install("FeedFilterHook") { FeedFilterHook.init(this, param.classLoader) }
+
+        // 没有需要符号解析的功能时，连 DEX 扫描都不要触发。
+        if (HOST_SYMBOL_FEATURES.any(::featureEnabled) &&
+            !HostSymbols.initialize(param.applicationInfo, processName == param.packageName)
+        ) return
+        installIfEnabled("FeedFilterHook") { FeedFilterHook.init(this, param.classLoader) }
         // 注册固定播放倍速 Hook
-        HookRuntime.install("PlaybackSpeedHook") { PlaybackSpeedHook.init(this, param.classLoader) }
+        installIfEnabled("PlaybackSpeedHook") { PlaybackSpeedHook.init(this, param.classLoader) }
 
         // 注册评论区一键翻译 Hook
-        HookRuntime.install("CommentTranslateHook") { CommentTranslateHook.init(this, param.classLoader) }
+        installIfEnabled("CommentTranslateHook") { CommentTranslateHook.init(this, param.classLoader) }
 
         // 注册视频正文描述原生翻译 Hook
-        HookRuntime.install("VideoTranslateHook") { VideoTranslateHook.init(this, param.classLoader) }
+        installIfEnabled("VideoTranslateHook") { VideoTranslateHook.init(this, param.classLoader) }
 
         // 注册评论复制仅复制正文 Hook
-        HookRuntime.install("CommentCopyHook") { CommentCopyHook.init(this, param.classLoader) }
+        installIfEnabled("CommentCopyHook") { CommentCopyHook.init(this, param.classLoader) }
 
         // 注册作者地理位置显示 Hook
-        HookRuntime.install("AuthorLocationHook") { AuthorLocationHook.init(this, param.classLoader) }
+        installIfEnabled("AuthorLocationHook") { AuthorLocationHook.init(this, param.classLoader) }
 
         // 注册视频进度条常显 Hook
-        HookRuntime.install("ProgressBarHook") { ProgressBarHook.init(this, param.classLoader) }
+        installIfEnabled("ProgressBarHook") { ProgressBarHook.init(this, param.classLoader) }
 
         // 注册首页 Feed 自动清屏 Hook
-        HookRuntime.install("AutoCleanModeHook") { AutoCleanModeHook.init(this, param.classLoader) }
+        installIfEnabled("AutoCleanModeHook") { AutoCleanModeHook.init(this, param.classLoader) }
 
         // 注册全屏沉浸播放与视口贯通 Hook
-        HookRuntime.install("ImmersiveFullScreenHook") { ImmersiveFullScreenHook.init(this, param.classLoader) }
+        installIfEnabled("ImmersiveFullScreenHook") { ImmersiveFullScreenHook.init(this, param.classLoader) }
 
         // 注册 For You 流自动滚动地区解锁 Hook
-        HookRuntime.install("AutoScrollHook") { AutoScrollHook.init(this, param.classLoader) }
+        installIfEnabled("AutoScrollHook") { AutoScrollHook.init(this, param.classLoader) }
 
         // 注册视频保存增强（下载解锁 / 无水印 / 自定义路径）Hook
-        HookRuntime.install("DownloadHook") { DownloadHook.init(this, param.classLoader) }
+        installIfEnabled("DownloadHook") { DownloadHook.init(this, param.classLoader) }
 
         // 注册音频限制解锁（音乐级限制 / 视频级静音）Hook
-        HookRuntime.install("MusicUnlockHook") { MusicUnlockHook.init(this, param.classLoader) }
+        installIfEnabled("MusicUnlockHook") { MusicUnlockHook.init(this, param.classLoader) }
 
         // 注册系统状态栏隐藏 Hook（播放页特征：视频画布可见即隐藏）
-        HookRuntime.install("StatusBarHook") { StatusBarHook.init(this, param.classLoader) }
+        installIfEnabled("StatusBarHook") { StatusBarHook.init(this, param.classLoader) }
 
         // 注册长视频播放时长 Toast 提示 Hook
-        HookRuntime.install("VideoDurationAlertHook") { VideoDurationAlertHook.init(this, param.classLoader) }
+        installIfEnabled("VideoDurationAlertHook") { VideoDurationAlertHook.init(this, param.classLoader) }
+    }
+
+    /**
+     * 配置关闭等同于“不注册”。这比在拦截器内部再判断开关更安全，避免关闭功能仍修改宿主关键启动/框架调用链。
+     */
+    private fun installIfEnabled(feature: String, install: () -> Unit) {
+        if (featureEnabled(feature)) {
+            HookRuntime.install(feature, install)
+        } else {
+            HookRuntime.state(feature, "已关闭，未注册")
+        }
     }
 }

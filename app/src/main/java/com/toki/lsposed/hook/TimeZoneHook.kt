@@ -49,7 +49,7 @@ object TimeZoneHook {
      * @param context 宿主目标应用的上下文对象。
      *
      * Callers:
-     * - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主启动时触发配置加载。
+     * - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主启动时触发配置加载。
      */
     fun refreshConfig(context: Context) {
         isEnabled = ConfigClient.getBoolean(context, "timezone_spoof_enabled")
@@ -78,7 +78,7 @@ object TimeZoneHook {
      * @param app 宿主 Application 实例。
      *
      * Callers:
-     * - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主 Application 创建时注入生效。
+     * - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主 Application 创建时注入生效。
      */
     fun applyToApplication(app: Application) {
         if (!isEnabled) {

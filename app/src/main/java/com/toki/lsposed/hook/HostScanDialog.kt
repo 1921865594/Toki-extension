@@ -1,8 +1,6 @@
 package com.toki.lsposed.hook
 
 import android.app.Activity
-import android.content.ContextWrapper
-import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.view.Window
@@ -46,7 +44,7 @@ import com.toki.lsposed.ui.tokiColorScheme
  * Callers: HostScanController.render。
  */
 internal class HostScanDialog(activity: Activity, onFailureDismiss: () -> Unit) :
-    ComponentDialog(ScanContext(activity), android.R.style.Theme_Material_Light_Dialog_NoActionBar) {
+    ComponentDialog(activity, android.R.style.Theme_Material_Light_Dialog_NoActionBar) {
     private var status by mutableStateOf(HostScanStatus())
     private val composeView = ComposeView(context).apply {
         setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
@@ -91,27 +89,6 @@ internal class HostScanDialog(activity: Activity, onFailureDismiss: () -> Unit) 
      * Callers: HostScanController.render。
      */
     fun render(state: HostScanStatus) { status = state }
-}
-
-/**
- * 保留宿主活动的窗口服务，隔离 Compose 读取的模块资源和主题。
- * @param activity 宿主前台活动。
- * Callers: HostScanDialog 构造函数。
- */
-private class ScanContext(activity: Activity) : ContextWrapper(activity) {
-    private val moduleContext = activity.createPackageContext("io.github.meiyongai.toki", 0)
-        .createConfigurationContext(activity.resources.configuration)
-    private val moduleTheme = moduleContext.resources.newTheme().apply {
-        applyStyle(android.R.style.Theme_Material_Light_Dialog_NoActionBar, true)
-    }
-    /** 提供模块资源。@return Toki 资源集合。Callers: Compose、ComponentDialog。 */
-    override fun getResources(): Resources = moduleContext.resources
-    /** 提供模块资产。@return Toki 资产管理器。Callers: Android 字体与资源加载。 */
-    override fun getAssets(): android.content.res.AssetManager = moduleContext.assets
-    /** 提供与模块资源一致的主题。@return 窗口主题。Callers: ComponentDialog。 */
-    override fun getTheme(): Resources.Theme = moduleTheme
-    /** 解析模块 Compose 类型。@return 模块加载器。Callers: Android 视图系统。 */
-    override fun getClassLoader(): ClassLoader = checkNotNull(HostScanDialog::class.java.classLoader)
 }
 
 /**

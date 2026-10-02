@@ -42,7 +42,7 @@ object GpsHook {
      * @param context 宿主目标应用的上下文对象。
      *
      * Callers:
-     * - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主启动时触发配置加载。
+     * - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主启动时触发配置加载。
      */
     fun refreshConfig(context: Context) {
         isEnabled = ConfigClient.getBoolean(context, "gps_spoof_enabled")

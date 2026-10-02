@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <permission android:name="io.github.meiyongai.toki.permission.READ_DIAGNOSTICS"
+    <permission android:name="com.toki.lsposed.permission.READ_DIAGNOSTICS"
         android:protectionLevel="signature" />
-    <uses-permission android:name="io.github.meiyongai.toki.permission.READ_DIAGNOSTICS" />
+    <uses-permission android:name="com.toki.lsposed.permission.READ_DIAGNOSTICS" />
 
     <!-- 声明目标宿主应用的包可见性，确保 Android 11+ (API 30+) 环境下可正确解析启动 Intent -->
     <queries>
@@ -40,7 +40,7 @@
         <!-- 桌面启动别名：禁用该组件即可从桌面隐藏模块图标，
              恢复入口为 LSPosed 管理器中的模块启动按钮 -->
         <activity-alias
-            android:name="io.github.meiyongai.toki.LauncherAlias"
+            android:name="com.toki.lsposed.LauncherAlias"
             android:targetActivity=".ui.MainActivity"
             android:exported="true">
             <intent-filter>

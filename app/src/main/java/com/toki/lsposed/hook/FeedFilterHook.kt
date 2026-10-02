@@ -117,7 +117,7 @@ object FeedFilterHook {
      * 确保配置中心已初始化。
      * @param context 已附加的宿主上下文。
      * @return Unit。
-     * Callers: TokiModule.hookApplication。
+     * Callers: TokiModule.hookApplicationIfNeeded。
      */
     fun refreshConfig(context: Context) = ConfigClient.init(context)
 

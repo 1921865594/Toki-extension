@@ -37,7 +37,7 @@ object ConfigClient {
      */
     @Synchronized fun init(context: Context) {
         if (initialized) return
-        check(!host && context.packageName == "io.github.meiyongai.toki") { "宿主必须通过框架初始化配置" }
+        check(!host && context.packageName == "com.toki.lsposed") { "宿主必须通过框架初始化配置" }
         store.attachLocal(context.getSharedPreferences(ConfigStore.LOCAL_NAME, Context.MODE_PRIVATE))
         initialized = true
     }

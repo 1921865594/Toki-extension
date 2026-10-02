@@ -90,7 +90,7 @@ object SimHook {
      * @param context 宿主目标应用的上下文对象。
      *
      * Callers:
-     * - `com.toki.lsposed.hook.SimHook.hookApplication`: 宿主 Application 创建时触发同步。
+     * - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主 Application 创建时触发同步。
      */
     fun refreshConfig(context: Context) {
         isEnabled = ConfigClient.getBoolean(context, "sim_spoof_enabled")

@@ -80,7 +80,7 @@ object MusicUnlockHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主冷启动完成时分发。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主冷启动完成时分发。
      */
     fun refreshConfig(context: Context) {
         // 配置由 ConfigClient 统一管理并缓存

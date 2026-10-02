@@ -132,7 +132,7 @@ object PlaybackSpeedHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主进程初始化时同步。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主进程初始化时同步。
      */
     fun refreshConfig(context: Context) {
         if (speedMemory == null) speedMemory = PlaybackSpeedMemory(

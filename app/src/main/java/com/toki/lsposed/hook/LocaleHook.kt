@@ -29,7 +29,7 @@ import java.util.Locale
  *
  * Callers:
  *     - `com.toki.lsposed.hook.TokiModule.onPackageLoaded`: 宿主目标包加载就绪后初始化拦截器。
- *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主应用启动时刷新并应用配置。
+ *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主应用启动时刷新并应用配置。
  */
 object LocaleHook {
 
@@ -88,7 +88,7 @@ object LocaleHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主启动时触发配置加载。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主启动时触发配置加载。
      */
     fun refreshConfig(context: Context) {
         isEnabled = ConfigClient.getBoolean(context, "language_spoof_enabled")
@@ -126,7 +126,7 @@ object LocaleHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主 Application 创建时调用。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主 Application 创建时调用。
      */
     fun applyToApplication(app: Application) {
         if (!isEnabled) {

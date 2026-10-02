@@ -20,7 +20,7 @@ internal class HostScanController private constructor(private val app: Applicati
          * 在宿主主进程订阅活动生命周期；进程级控制器独立调度退出，窗口随前台活动释放。
          * @param app 当前宿主Application。
          * @return Unit。
-         * Callers: TokiModule.hookApplication。
+         * Callers: TokiModule.hookApplicationIfNeeded。
          */
         fun attach(app: Application) {
             if (controller != null) return
@@ -39,6 +39,8 @@ internal class HostScanController private constructor(private val app: Applicati
     private val main = Handler(Looper.getMainLooper())
     private var foreground = WeakReference<Activity>(null)
     private var dialog: HostScanDialog? = null
+    /** 扫描 UI 创建失败时只禁用 UI，不得影响宿主扫描及业务 Hook。 */
+    private var dialogCreationFailed = false
     private val refresh = object : Runnable {
         /** 更新可见窗口；无前台活动时停止刷新。@return Unit。Callers: 主线程Handler。 */
         override fun run() {
@@ -58,10 +60,27 @@ internal class HostScanController private constructor(private val app: Applicati
         scheduleClose()
         val state = session.status
         if (state.phase == HostScanPhase.IDLE) { dismissDialog(); return }
-        if (dialog == null) {
-            dialog = HostScanDialog(activity) { session.dismissFailure(); dismissDialog() }.also { it.show() }
+        if (dialog == null && !dialogCreationFailed) {
+            runCatching {
+                HostScanDialog(activity) { session.dismissFailure(); dismissDialog() }.also { it.show() }
+            }.onSuccess { created ->
+                dialog = created
+                HookRuntime.event("TokiHostScan", "扫描窗口已创建 pid=${Process.myPid()}")
+            }.onFailure { error ->
+                // 扫描窗口是诊断/适配 UI，不是宿主功能依赖。任何 UI/资源异常都必须被吞掉，
+                // 否则异常发生在主线程会直接终止 TikTok。后台 DEX 扫描继续运行。
+                dialogCreationFailed = true
+                Log.e("TokiHostScan", "扫描窗口创建失败，继续后台扫描，不影响 TikTok", error)
+                HookRuntime.failure("HostScanDialog", error, "扫描窗口不可用，已降级为后台扫描")
+            }
         }
-        dialog!!.render(state)
+
+        runCatching { dialog?.render(state) }.onFailure { error ->
+            dialogCreationFailed = true
+            Log.e("TokiHostScan", "扫描窗口刷新失败，继续后台扫描，不影响 TikTok", error)
+            HookRuntime.failure("HostScanDialog", error, "扫描窗口刷新失败，已降级为后台扫描")
+            dismissDialog()
+        }
     }
 
     /**
@@ -105,6 +124,7 @@ internal class HostScanController private constructor(private val app: Applicati
     /** 活动进入前台后恢复窗口。@param activity 宿主活动。@return Unit。Callers: Android Application。 */
     override fun onActivityResumed(activity: Activity) {
         dismissDialog()
+        dialogCreationFailed = false
         foreground = WeakReference(activity)
         main.post(refresh)
     }

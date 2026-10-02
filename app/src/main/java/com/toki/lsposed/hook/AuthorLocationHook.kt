@@ -45,7 +45,7 @@ object AuthorLocationHook {
      *     Unit: 无返回值。
      *
      * Callers:
-     *     - `com.toki.lsposed.hook.TokiModule.hookApplication`: 宿主应用启动与前台初始化时同步。
+     *     - `com.toki.lsposed.hook.TokiModule.hookApplicationIfNeeded`: 宿主应用启动与前台初始化时同步。
      */
     fun refreshConfig(context: Context) {
         ConfigClient.init(context)

@@ -17,7 +17,7 @@ object CommentCopyHook {
      * 初始化共享配置；每次复制直接读取最新快照，不另存功能开关。
      * @param context 已附加的宿主上下文。
      * @return Unit。
-     * Callers: TokiModule.hookApplication。
+     * Callers: TokiModule.hookApplicationIfNeeded。
      */
     fun refreshConfig(context: Context) = ConfigClient.init(context)
 

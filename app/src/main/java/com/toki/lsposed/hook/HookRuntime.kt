@@ -34,7 +34,7 @@ internal object HookRuntime {
      * 注册仅响应管理端查询的诊断接收器，不创建定时发布任务。
      * @param value 已附加的宿主上下文。
      * @return Unit。
-     * Callers: TokiModule.hookApplication。
+     * Callers: TokiModule.hookApplicationIfNeeded。
      */
     @Synchronized fun attach(value: Context) {
         if (receiver != null || process != value.packageName) return
@@ -163,7 +163,7 @@ internal object HookRuntime {
      * @param feature 已注册的功能标识。
      * @param configure 初始化或热更新操作。
      * @return Unit。
-     * Callers: TokiModule.refreshConfiguration。
+     * Callers: TokiModule.refreshEnabledConfiguration。
      */
     fun configure(feature: String, configure: () -> Unit) {
         if (synchronized(this) { handles[feature].isNullOrEmpty() }) return
