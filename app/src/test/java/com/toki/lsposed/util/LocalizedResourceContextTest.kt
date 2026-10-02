@@ -55,7 +55,7 @@ class LocalizedResourceContextTest {
             for (index in 0 until nodes.length) {
                 val element = nodes.item(index) as Element
                 val name = element.getAttribute("name")
-                val resourceId = localized.resources.getIdentifier(name, "string", localized.packageName)
+                val resourceId = localized.resources.getIdentifier(name, "string", "com.toki.lsposed")
                 assertTrue("Unknown resource: $name", resourceId != 0)
                 val expected = decode(element.textContent)
                 assertEquals("${language.languageTag}/$name", expected, localized.getString(resourceId))
